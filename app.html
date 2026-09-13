@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#0A0B0D">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GROUND ZERO">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="ground-zero-icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="ground-zero-icon.svg">
+<title>GROUND ZERO</title>
+<style>
+html,body{margin:0;width:100%;height:100%;background:#0A0B0D;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif}
+#splash{position:fixed;inset:0;display:grid;place-items:center;background:#0A0B0D;color:#F4F5F6;z-index:2;transition:opacity .25s ease}
+#splash.hide{opacity:0;pointer-events:none}
+.mark{display:flex;flex-direction:column;align-items:center;gap:14px;font-weight:800;letter-spacing:-.4px}.logo{width:72px;height:72px;border-radius:18px;background:#17181B;display:grid;place-items:center;color:#C9F73D;font-size:30px;font-weight:900}.sub{font-size:12px;color:#9498A0;font-weight:600}
+iframe{position:fixed;inset:0;width:100%;height:100%;border:0;background:#0A0B0D}
+</style>
+</head>
+<body>
+<div id="splash"><div class="mark"><div class="logo">GZ</div><div>GROUND ZERO</div><div class="sub">Hybrid training</div></div></div>
+<iframe id="app" src="./?v=44" title="GROUND ZERO"></iframe>
+<script>
+const frame=document.getElementById('app'),splash=document.getElementById('splash');
+frame.addEventListener('load',()=>setTimeout(()=>splash.classList.add('hide'),180));
+</script>
+</body>
+</html>
