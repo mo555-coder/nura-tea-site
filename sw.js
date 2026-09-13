@@ -13,7 +13,8 @@ self.addEventListener('fetch',event=>{
       const switcher=`<div class="athleteSwitch" id="athleteSwitch" aria-label="Choisir le profil"><button id="switchMomo">Momo</button><button id="switchMicky">⚡ Micky</button></div>`;
       if(!html.includes('mh-v3-switch-style')) html=html.replace('</head>',css+'</head>');
       if(!html.includes('id="athleteSwitch"')) html=html.replace('</header>','</header>'+switcher);
-      if(!html.includes('src="./v3.js')) html=html.replace('</body>','<script src="./v3.js?v=3"></script></body>');
+      if(!html.includes('src="./v3.js')) html=html.replace('</body>','<script src="./v3.js?v=3"></script><script src="./v4.js?v=4"></script></body>');
+      else if(!html.includes('src="./v4.js')) html=html.replace('</body>','<script src="./v4.js?v=4"></script></body>');
       return new Response(html,{status:res.status,statusText:res.statusText,headers:res.headers});
     }catch(e){return fetch(req)}
   })());
