@@ -1,65 +1,22 @@
 (()=>{
   if(typeof P==='undefined'||typeof S==='undefined'||typeof rows==='undefined'||typeof save!=='function') return;
-  S.loads=S.loads||{};
-  const loadKeyV4=(person,code,i)=>`${person}-${code}-${i}`;
-  const fmt=(v)=>v===''||v==null?'':String(v).replace('.',',');
-  const getLoad=(code,i,e)=>{
-    const k=loadKeyV4(S.person,code,i);
-    const saved=S.loads[k]?.current;
-    if(saved!==undefined&&saved!==null&&saved!=='') return saved;
-    return e[2]?parseFloat(e[2]):'';
-  };
-  const getSets=(code,i,e)=>{
-    let n=parseInt((String(e[1]).match(/^(\d+)/)||['','3'])[1]);
-    if(S.week===4)n=Math.max(2,n-1);
-    if(S.person==='power'&&i===0)n=2;
-    return n;
-  };
+  S.loads=S.loads||{};S.milestones=S.milestones||[];
+  const loadKey=(person,code,i)=>`${person}-${code}-${i}`;
+  const fmt=v=>v===''||v==null?'':String(Number(v)).replace('.',',');
+  const getLoad=(code,i,e)=>{const k=loadKey(S.person||'momo',code,i),saved=S.loads[k]?.current;return saved!==undefined&&saved!==null&&saved!==''?saved:(e[2]?parseFloat(e[2]):'')};
+  const getSets=(code,i,e)=>{let n=parseInt((String(e[1]).match(/^(\d+)/)||['','3'])[1]);if(S.week===4)n=Math.max(2,n-1);if(S.person==='power'&&i===0)n=2;return n};
+  const st=document.createElement('style');st.textContent=`.quickWeight{display:flex;align-items:center;gap:6px;flex:0 0 auto}.quickWeight input{width:78px;background:#0e0e11;border:1px solid var(--line);border-radius:11px;padding:9px 8px;color:#fff;text-align:center;font:inherit;font-weight:900}.quickWeight span{font-size:11px;color:var(--muted);font-weight:800}.exTop{align-items:center}.weightHint{font-size:10px;color:var(--muted);margin-top:4px}.smartModal{position:fixed;inset:0;background:#000a;display:flex;align-items:flex-end;justify-content:center;padding:14px;z-index:99}.smartSheet{width:min(560px,100%);background:#17171c;border:1px solid #34343c;border-radius:24px;padding:18px;box-shadow:0 30px 100px #000}.smartSheet h3{margin:0 0 6px}.smartSheet p{font-size:13px;line-height:1.45;color:var(--muted)}.feelGrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}.feelGrid button{border:1px solid var(--line);background:#101014;color:#fff;border-radius:14px;padding:12px 8px;font-weight:900}.feelGrid .good{color:var(--lime)}.feelGrid .bad{color:#ff8a8a}.smartAdvice{margin-top:10px;padding:11px;border-radius:14px;background:#0e0e11;border:1px solid var(--line);font-size:12px;line-height:1.45}`;document.head.appendChild(st);
 
-  const st=document.createElement('style');
-  st.textContent=`.quickWeight{display:flex;align-items:center;gap:6px;flex:0 0 auto}.quickWeight input{width:74px;background:#0e0e11;border:1px solid var(--line);border-radius:10px;padding:8px 7px;color:#fff;text-align:center;font:inherit}.quickWeight span{font-size:11px;color:var(--muted);font-weight:800}.exTop{align-items:center}.weightHint{font-size:10px;color:var(--muted);margin-top:4px}`;
-  document.head.appendChild(st);
+  function commitLoad(code,i,e,kg,reason){const k=loadKey(S.person||'momo',code,i),prev=getLoad(code,i,e);S.loads[k]={...(S.loads[k]||{}),current:kg,last:kg,date:new Date().toISOString(),reason};if(kg>prev){S.milestones.unshift({date:new Date().toISOString(),person:S.person||'momo',name:e[0],from:prev||0,to:kg,reason});S.milestones=S.milestones.slice(0,50)}save()}
+  function askFeeling(code,i,e,next,prev){document.getElementById('smartLoadModal')?.remove();const m=document.createElement('div');m.className='smartModal';m.id='smartLoadModal';m.innerHTML=`<div class="smartSheet"><h3>${e[0]} · ${fmt(prev)} → ${fmt(next)} kg</h3><p>Tu veux monter avant que le palier automatique soit validé. Comment tu te sens aujourd’hui ?</p><div class="feelGrid"><button class="good" data-feel="facile">Très bien</button><button data-feel="moyen">Moyen</button><button class="bad" data-feel="douleur">Douleur / gêne</button></div><div class="smartAdvice" id="smartAdvice">L’app va te conseiller selon ton ressenti.</div><button class="btn secondary" id="cancelLoad">Annuler</button></div>`;document.body.appendChild(m);m.querySelector('#cancelLoad').onclick=()=>m.remove();m.querySelectorAll('[data-feel]').forEach(b=>b.onclick=()=>{const f=b.dataset.feel,a=m.querySelector('#smartAdvice');if(f==='facile'){a.innerHTML=`OK pour tester <b>${fmt(next)} kg</b> si la technique reste propre et que tu gardes environ 1–2 reps en réserve.<button class="btn" id="confirmLoad">Noter ${fmt(next)} kg</button>`;a.querySelector('#confirmLoad').onclick=()=>{commitLoad(code,i,e,next,'hausse manuelle validée · ressenti bon');m.remove();renderAll();toast('Nouvelle charge mémorisée ✓')}}else if(f==='moyen'){a.innerHTML=`Je préfère <b>ne pas valider encore</b>. Reste à ${fmt(prev)} kg, ou teste ${fmt(next)} kg sur la première série seulement. Si tu fais 10+ reps propres sans te grinder, on pourra la garder.<button class="btn secondary" id="closeAdvice">Compris</button>`;a.querySelector('#closeAdvice').onclick=()=>{m.remove();renderAll()}}else{a.innerHTML=`N’augmente pas aujourd’hui. Reviens à <b>${fmt(prev)} kg</b>. Une gêne/douleur est un mauvais moment pour forcer une progression.<button class="btn secondary" id="closeAdvice">Compris</button>`;a.querySelector('#closeAdvice').onclick=()=>{m.remove();renderAll()}}})}
 
-  rows=function(code,interactive){
-    return P[code].ex.map((e,i)=>{
-      const person=S.person||'momo',key=loadKeyV4(person,code,i),draft=S.drafts?.[key]||{},sets=getSets(code,i,e),suggested=getLoad(code,i,e);
-      let setHtml='';
-      if(interactive){
-        for(let n=0;n<sets;n++){
-          const x=(draft.sets||[])[n]||{};
-          const defaultKg=x.kg??(suggested!==''?suggested:'');
-          setHtml+=`<div class="setgrid"><span>S${n+1}</span><input data-set="${key}" data-i="${n}" data-f="kg" inputmode="decimal" placeholder="kg" value="${defaultKg}"><input data-set="${key}" data-i="${n}" data-f="reps" inputmode="numeric" placeholder="reps" value="${x.reps??''}"><button class="check ${x.done?'on':''}" data-check="${key}" data-i="${n}">${x.done?'✓':'○'}</button></div>`;
-        }
-      }
-      let meta=(typeof planTextV3==='function'?planTextV3(e):e[1]);
-      if(S.person==='power'&&i===0&&typeof power!=='undefined'&&power[code]) meta=power[code].main+' · '+e[3]; else meta+=' · '+e[3];
-      const weightBox=interactive
-        ? `<span class="tag">${suggested!==''?'cible '+fmt(suggested)+' kg':'poids à saisir'}</span>`
-        : `<div class="quickWeight"><input class="js-quick-weight" data-load-code="${code}" data-load-i="${i}" inputmode="decimal" placeholder="kg" value="${suggested!==''?suggested:''}"><span>kg</span></div>`;
-      return `<div class="exercise"><div class="exTop"><div><div class="exName">${e[0]}</div><div class="exMeta">${meta}</div><div class="weightHint">${suggested!==''?'Charge mémorisée : '+fmt(suggested)+' kg':'Entre ta charge de travail'}</div></div>${weightBox}</div>${setHtml}</div>`;
-    }).join('');
-  };
+  function weightBox(code,i,e,interactive){const v=getLoad(code,i,e);return interactive?`<div class="quickWeight"><input class="js-quick-weight" data-load-code="${code}" data-load-i="${i}" inputmode="decimal" value="${v!==''?fmt(v):''}" placeholder="kg"><span>kg</span></div>`:`<div class="quickWeight"><input class="js-quick-weight" data-load-code="${code}" data-load-i="${i}" inputmode="decimal" value="${v!==''?fmt(v):''}" placeholder="kg"><span>kg</span></div>`}
 
-  const bindQuickWeights=()=>{
-    document.querySelectorAll('.js-quick-weight').forEach(inp=>{
-      inp.onchange=()=>{
-        const code=inp.dataset.loadCode,i=+inp.dataset.loadI,key=loadKeyV4(S.person||'momo',code,i);
-        const raw=String(inp.value).replace(',','.').trim();
-        if(raw==='') return;
-        const kg=parseFloat(raw);
-        if(!Number.isFinite(kg)||kg<0) return;
-        const prev=S.loads[key]||{};
-        S.loads[key]={...prev,current:kg,last:kg,date:new Date().toISOString(),reason:'charge saisie manuellement'};
-        save();
-        if(typeof toast==='function') toast(`${P[code].ex[i][0]} · ${fmt(kg)} kg mémorisé`);
-        if(typeof renderCoach==='function'){const t=typeof today==='function'?today():['rest','rest'];renderCoach(t[0],t[1]);}
-      };
-    });
-  };
+  rows=function(code,interactive){return P[code].ex.map((e,i)=>{const person=S.person||'momo',k=loadKey(person,code,i),draft=S.drafts?.[k]||{},sets=getSets(code,i,e),suggested=getLoad(code,i,e);let sh='';if(interactive){for(let n=0;n<sets;n++){const x=(draft.sets||[])[n]||{};sh+=`<div class="setgrid"><span>S${n+1}</span><input data-set="${k}" data-i="${n}" data-f="kg" inputmode="decimal" placeholder="kg" value="${x.kg??(suggested!==''?suggested:'')}"><input data-set="${k}" data-i="${n}" data-f="reps" inputmode="numeric" placeholder="reps" value="${x.reps??''}"><button class="check ${x.done?'on':''}" data-check="${k}" data-i="${n}">${x.done?'✓':'○'}</button></div>`}}let meta=(typeof planTextV3==='function'?planTextV3(e):e[1])+' · '+(e[3]||'');return `<div class="exercise"><div class="exTop"><div><div class="exName">${e[0]}</div><div class="exMeta">${meta}</div><div class="weightHint">${suggested!==''?'Charge mémorisée : '+fmt(suggested)+' kg':'Entre ta charge actuelle'}</div></div>${weightBox(code,i,e,interactive)}</div>${sh}</div>`}).join('')};
 
-  const oldRenderProgram=renderProgram;
-  renderProgram=function(){oldRenderProgram();bindQuickWeights();};
-  const oldRenderAll=renderAll;
-  renderAll=function(){oldRenderAll();bindQuickWeights();};
-  renderProgram();
+  const bindQuickWeights=()=>document.querySelectorAll('.js-quick-weight').forEach(inp=>{inp.onchange=()=>{const code=inp.dataset.loadCode,i=+inp.dataset.loadI,e=P[code].ex[i],prev=getLoad(code,i,e),raw=String(inp.value).replace(',','.').trim();if(raw==='')return;const kg=parseFloat(raw);if(!Number.isFinite(kg)||kg<0)return;if(prev!==''&&kg>prev){inp.value=fmt(prev);askFeeling(code,i,e,kg,prev)}else{commitLoad(code,i,e,kg,'charge saisie manuellement');toast(`${e[0]} · ${fmt(kg)} kg mémorisé`);if(typeof renderAll==='function')renderAll()}}});
+  const oldRenderProgram=renderProgram;renderProgram=function(){oldRenderProgram();bindQuickWeights()};
+  const oldRenderToday=renderToday;renderToday=function(){oldRenderToday();bindQuickWeights()};
+  const oldRenderAll=renderAll;renderAll=function(){oldRenderAll();bindQuickWeights()};
+  renderAll();
 })();
