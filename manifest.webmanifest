@@ -2,7 +2,7 @@
   "name": "GROUND ZERO",
   "short_name": "GROUND ZERO",
   "description": "Application hybride musculation, run et préparation JJB.",
-  "start_url": "./?source=pwa",
+  "start_url": "./app.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#0A0B0D",
