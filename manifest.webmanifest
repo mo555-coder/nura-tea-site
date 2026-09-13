@@ -1,1 +1,19 @@
-{"name":"MOMO HYBRID","short_name":"HYBRID","start_url":"./","display":"standalone","background_color":"#09090b","theme_color":"#09090b","description":"Musculation, course et préparation JJB avec progression automatique."}
+{
+  "name": "GROUND ZERO",
+  "short_name": "GROUND ZERO",
+  "description": "Application hybride musculation, run et préparation JJB.",
+  "start_url": "./?source=pwa",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0A0B0D",
+  "theme_color": "#0A0B0D",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "ground-zero-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
